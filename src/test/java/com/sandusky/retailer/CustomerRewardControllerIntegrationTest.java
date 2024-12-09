@@ -15,83 +15,96 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.sandusky.retailer.bean.CustomerRewardRequest;
+import com.sandusky.retailer.enums.RewardPointConstants;
 import com.sandusky.retailer.model.CustomerTransaction;
 import com.sandusky.retailer.repository.CustomerTransactionRepository;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CustomerRewardControllerIntegrationTest {
 	@LocalServerPort
-    private int port;
+	private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+	@Autowired
+	private TestRestTemplate restTemplate;
 	private CustomerRewardRequest customerRewardRequestOne;
 	private CustomerRewardRequest customerRewardRequestTwo;
 	private CustomerRewardRequest badCustomerRewardRequest;
 	@Autowired
-    private CustomerTransactionRepository customerTransactionRepository;
+	private CustomerTransactionRepository customerTransactionRepository;
+
 	@BeforeEach
 	void setUp() throws Exception {
-        // Setup test data
-		customerRewardRequestOne = new CustomerRewardRequest("customerOne", 200d, 2d);
-		customerRewardRequestTwo = new CustomerRewardRequest("customerTwo", 100d, 2d);
-		badCustomerRewardRequest = new CustomerRewardRequest("customerThree", null, null);
+		// Setup test data
+		customerRewardRequestOne = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_ONE.getValue(), 200d, 2d);
+		customerRewardRequestTwo = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_TWO.getValue(), 100d, 2d);
+		badCustomerRewardRequest = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_THREE.getValue(), null,
+				null);
 	}
 
 	@AfterEach
 	void tearDown() throws Exception {
 		customerRewardRequestOne = null;
 		customerRewardRequestTwo = null;
-        customerTransactionRepository.deleteById("customerOne");
-        customerTransactionRepository.deleteById("customerTwo");
+		customerTransactionRepository.deleteByCustomerId(RewardPointConstants.CUSTOMER_ONE.getValue());
+		customerTransactionRepository.deleteByCustomerId(RewardPointConstants.CUSTOMER_TWO.getValue());
 	}
 
 	@Test
 	public void testAddRewardPoints() {
-		String url = "http://localhost:" + port + "/customerRewards/addPoints";
-		ResponseEntity<String> addRewardPointsResponse = restTemplate.postForEntity(url, customerRewardRequestTwo, String.class);
+		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
+				+ RewardPointConstants.CUSTOMER_REWARDS_ADD_POINTS_URI.getValue();
+		ResponseEntity<String> addRewardPointsResponse = restTemplate.postForEntity(url, customerRewardRequestTwo,
+				String.class);
 		assertEquals(HttpStatus.CREATED, addRewardPointsResponse.getStatusCode());
 	}
-	
+
 	@Test
 	public void testAddRewardPointsBadRequest() {
-		String url = "http://localhost:" + port + "/customerRewards/addPoints";
-		ResponseEntity<String> addRewardPointsResponse = restTemplate.postForEntity(url, badCustomerRewardRequest, String.class);
+		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
+				+ RewardPointConstants.CUSTOMER_REWARDS_ADD_POINTS_URI.getValue();
+		ResponseEntity<String> addRewardPointsResponse = restTemplate.postForEntity(url, badCustomerRewardRequest,
+				String.class);
 		assertEquals(HttpStatus.BAD_REQUEST, addRewardPointsResponse.getStatusCode());
 	}
-	
+
 	@Test
-    public void testMonthlyRewardPoints() {
+	public void testMonthlyRewardPoints() {
 		CustomerTransaction customerTransactionOne = new CustomerTransaction(customerRewardRequestOne.getCustomerId(),
 				customerRewardRequestOne.getAmountSpent(), customerRewardRequestOne.getRewardPoints());
 		CustomerTransaction customerTransactionTwo = new CustomerTransaction(customerRewardRequestTwo.customerId,
 				customerRewardRequestTwo.getAmountSpent(), customerRewardRequestTwo.getRewardPoints());
-        customerTransactionRepository.save(customerTransactionOne);
-        customerTransactionRepository.save(customerTransactionTwo);
+		customerTransactionRepository.save(customerTransactionOne);
+		customerTransactionRepository.save(customerTransactionTwo);
 
-        // Test the API
-        String url = "http://localhost:" + port + "/customerRewards/customerOne/monthly/" + LocalDateTime.now().getMonthValue() + "/" + LocalDateTime.now().getYear();
-        ResponseEntity<Integer> rewardPointsResponse = restTemplate.getForEntity(url, Integer.class);
+		// Test the API
+		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
+				+ RewardPointConstants.CUSTOMER_REWARDS_CUSTOMER_MONTHLY_URI.getValue()
+				+ LocalDateTime.now().getMonthValue() + "/" + LocalDateTime.now().getYear();
+		ResponseEntity<Integer> rewardPointsResponse = restTemplate.getForEntity(url, Integer.class);
 
-        // Verify
-        assertThat(rewardPointsResponse.getStatusCode()).isEqualTo(HttpStatus.OK); // 90 for 120$, 25 for 75$, 10 for 50$
-    }
+		// Verify
+		assertThat(rewardPointsResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+	}
 
-    @Test
-    public void testThreeMonthTotalRewardPoints() {
-        // Setup test data
+	@Test
+	public void testThreeMonthTotalRewardPoints() {
+		// Setup test data
 		CustomerTransaction customerTransactionOne = new CustomerTransaction(customerRewardRequestOne.customerId,
 				customerRewardRequestOne.getAmountSpent(), customerRewardRequestOne.getRewardPoints());
 		CustomerTransaction customerTransactionTwo = new CustomerTransaction(customerRewardRequestTwo.customerId,
 				customerRewardRequestTwo.getAmountSpent(), customerRewardRequestTwo.getRewardPoints());
-        customerTransactionRepository.save(customerTransactionOne);
-        customerTransactionRepository.save(customerTransactionTwo);
-        customerRewardRequestOne = new CustomerRewardRequest("customerOne", 250d, null);
-        customerTransactionRepository.save(customerTransactionOne);
-        // Test the API
-        String url = "http://localhost:" + port + "/customerRewards/customerOne/total";
-        ResponseEntity<Integer> rewardPointsResponse = restTemplate.getForEntity(url, Integer.class);
+		customerTransactionRepository.save(customerTransactionOne);
+		customerTransactionRepository.save(customerTransactionTwo);
+		customerRewardRequestOne = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_ONE.getValue(), 250d, 2d);
+		customerTransactionOne = new CustomerTransaction(customerRewardRequestOne.customerId,
+				customerRewardRequestOne.getAmountSpent(), customerRewardRequestOne.getRewardPoints());
+		customerTransactionRepository.save(customerTransactionOne);
+		// Test the API
+		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
+				+ RewardPointConstants.CUSTOMER_REWARDS_CUSTOMER_TOTAL_URI.getValue();
+		ResponseEntity<Integer> rewardPointsResponse = restTemplate.getForEntity(url, Integer.class);
 
-        // Verify
-        assertThat(rewardPointsResponse.getStatusCode()).isEqualTo(HttpStatus.OK); // 90 for 120$, 25 for 75$, 20 for 70$
-    }
+		// Verify
+		assertThat(rewardPointsResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+	}
 }
