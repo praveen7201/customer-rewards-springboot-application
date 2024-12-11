@@ -35,10 +35,9 @@ class CustomerRewardControllerIntegrationTest {
 	@BeforeEach
 	void setUp() throws Exception {
 		// Setup test data
-		customerRewardRequestOne = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_ONE.getValue(), 200d, 2d);
-		customerRewardRequestTwo = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_TWO.getValue(), 100d, 2d);
-		badCustomerRewardRequest = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_THREE.getValue(), null,
-				null);
+		customerRewardRequestOne = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_ONE.getValue(), 200d);
+		customerRewardRequestTwo = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_TWO.getValue(), 100d);
+		badCustomerRewardRequest = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_THREE.getValue(), null);
 	}
 
 	@AfterEach
@@ -70,9 +69,9 @@ class CustomerRewardControllerIntegrationTest {
 	@Test
 	public void testMonthlyRewardPoints() {
 		CustomerTransaction customerTransactionOne = new CustomerTransaction(customerRewardRequestOne.getCustomerId(),
-				customerRewardRequestOne.getAmountSpent(), customerRewardRequestOne.getRewardPoints());
+				customerRewardRequestOne.getAmountSpent());
 		CustomerTransaction customerTransactionTwo = new CustomerTransaction(customerRewardRequestTwo.customerId,
-				customerRewardRequestTwo.getAmountSpent(), customerRewardRequestTwo.getRewardPoints());
+				customerRewardRequestTwo.getAmountSpent());
 		customerTransactionRepository.save(customerTransactionOne);
 		customerTransactionRepository.save(customerTransactionTwo);
 
@@ -80,24 +79,36 @@ class CustomerRewardControllerIntegrationTest {
 		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
 				+ RewardPointConstants.CUSTOMER_REWARDS_CUSTOMER_MONTHLY_URI.getValue()
 				+ LocalDateTime.now().getMonthValue() + "/" + LocalDateTime.now().getYear();
-		ResponseEntity<Integer> rewardPointsResponse = restTemplate.getForEntity(url, Integer.class);
+		ResponseEntity<Double> rewardPointsResponse = restTemplate.getForEntity(url, Double.class);
 
 		// Verify
 		assertThat(rewardPointsResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 	}
 
 	@Test
-	public void testThreeMonthTotalRewardPoints() {
+	public void testMonthlyRewardPointsBadRequest() {
+		// Test the API
+		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
+				+ RewardPointConstants.CUSTOMER_REWARDS_CUSTOMER_MONTHLY_URI.getValue() + 0 + "/"
+				+ LocalDateTime.now().getYear();
+		ResponseEntity<String> rewardPointsResponse = restTemplate.getForEntity(url, String.class);
+
+		// Verify
+		assertEquals(RewardPointConstants.INVALID_CUSTOMER_REQUEST_RESPONSE.getValue(), rewardPointsResponse.getBody());
+	}
+
+	@Test
+	public void testRewardPointsTotal() {
 		// Setup test data
 		CustomerTransaction customerTransactionOne = new CustomerTransaction(customerRewardRequestOne.customerId,
-				customerRewardRequestOne.getAmountSpent(), customerRewardRequestOne.getRewardPoints());
+				customerRewardRequestOne.getAmountSpent());
 		CustomerTransaction customerTransactionTwo = new CustomerTransaction(customerRewardRequestTwo.customerId,
-				customerRewardRequestTwo.getAmountSpent(), customerRewardRequestTwo.getRewardPoints());
+				customerRewardRequestTwo.getAmountSpent());
 		customerTransactionRepository.save(customerTransactionOne);
 		customerTransactionRepository.save(customerTransactionTwo);
-		customerRewardRequestOne = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_ONE.getValue(), 250d, 2d);
+		customerRewardRequestOne = new CustomerRewardRequest(RewardPointConstants.CUSTOMER_ONE.getValue(), 250d);
 		customerTransactionOne = new CustomerTransaction(customerRewardRequestOne.customerId,
-				customerRewardRequestOne.getAmountSpent(), customerRewardRequestOne.getRewardPoints());
+				customerRewardRequestOne.getAmountSpent());
 		customerTransactionRepository.save(customerTransactionOne);
 		// Test the API
 		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
@@ -106,5 +117,17 @@ class CustomerRewardControllerIntegrationTest {
 
 		// Verify
 		assertThat(rewardPointsResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+	}
+
+	@Test
+	public void testRewardPointsTotalBadRequest() {
+		// Setup test data
+		// Test the API
+		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
+				+ RewardPointConstants.CUSTOMER_REWARDS_CUSTOMER_TOTAL_NULL_URI.getValue();
+		ResponseEntity<String> rewardPointsResponse = restTemplate.getForEntity(url, String.class);
+
+		// Verify
+		assertEquals(RewardPointConstants.THREE_MONTHLY_REWARDS_ERROR_MSG.getValue(), rewardPointsResponse.getBody());
 	}
 }

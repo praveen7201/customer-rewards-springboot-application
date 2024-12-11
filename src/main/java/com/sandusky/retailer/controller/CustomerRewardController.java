@@ -14,7 +14,6 @@ import com.sandusky.retailer.enums.RewardPointConstants;
 import com.sandusky.retailer.service.RetailerRewardService;
 import com.sandusky.retailer.util.CustomerRequestUtil;
 
-import io.micrometer.common.util.StringUtils;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -30,36 +29,36 @@ public class CustomerRewardController {
 		if (customerRequestUtil.validAddRewardPointsRequest(customerRewardRequest)) {
 			retailerRewardService.postRewardPoints(customerRewardRequest);
 			responseEntity = ResponseEntity.status(HttpStatus.CREATED)
-					.body(RewardPointConstants.REWARD_POINTS_SUCCESSFULLY_ADDED_MSG.getValue());
+					.body(RewardPointConstants.REWARD_POINTS_SUCCESSFULLY_ADDED_RESPONSE.getValue());
 		} else {
 			responseEntity = ResponseEntity.badRequest()
-					.body(RewardPointConstants.INVALID_CUSTOMER_REQUEST_OBJECT_MSG.getValue());
+					.body(RewardPointConstants.INVALID_CUSTOMER_REQUEST_RESPONSE.getValue());
 		}
 		return responseEntity;
 	}
 
 	@GetMapping("/{customerId}/monthly/{month}/{year}")
-	public ResponseEntity<Object> getMonthlyRewards(@PathVariable String customerId, @PathVariable int month,
+	public ResponseEntity<Object> getMonthlyRewardsTotal(@PathVariable String customerId, @PathVariable int month,
 			@PathVariable int year) {
 		ResponseEntity<Object> responseEntity;
 		if (customerRequestUtil.validMonthlyRewardsRequest(customerId, month, year)) {
-			int monthlyRewards = retailerRewardService.getMonthlyRewardPoints(customerId, month, year);
+			double monthlyRewards = retailerRewardService.getMonthlyRewardsTotal(customerId, month, year);
 			responseEntity = ResponseEntity.ok(monthlyRewards);
 		} else {
 			responseEntity = ResponseEntity.badRequest()
-					.body(RewardPointConstants.INVALID_CUSTOMER_REQUEST_OBJECT_MSG.getValue());
+					.body(RewardPointConstants.INVALID_CUSTOMER_REQUEST_RESPONSE.getValue());
 		}
 		return responseEntity;
 	}
 
 	@GetMapping("/{customerId}/total")
-	public ResponseEntity<Object> getThreeMonthRewards(@PathVariable String customerId) {
+	public ResponseEntity<Object> getRewardsTotal(@PathVariable String customerId) {
 		ResponseEntity<Object> responseEntity;
-		if (StringUtils.isNotBlank(customerId)) {
-			responseEntity = ResponseEntity.ok(retailerRewardService.getThreeMonthTotal(customerId));
+		if (customerRequestUtil.validRewardsTotalRequest(customerId)) {
+			responseEntity = ResponseEntity.ok(retailerRewardService.getRewardsTotal(customerId));
 		} else {
 			responseEntity = ResponseEntity.badRequest()
-					.body(RewardPointConstants.THREE_MONTHLY_REWARDS_ERROR_MSG_MSG.getValue());
+					.body(RewardPointConstants.THREE_MONTHLY_REWARDS_ERROR_MSG.getValue());
 		}
 		return responseEntity;
 	}

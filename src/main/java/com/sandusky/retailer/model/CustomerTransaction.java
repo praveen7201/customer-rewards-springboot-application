@@ -15,12 +15,10 @@ public class CustomerTransaction {
     private String id;
     private String customerId;
     private double amountSpent;
-    private double rewardPoints;
     private LocalDateTime transactionDate;
-	public CustomerTransaction(String customerId, double amountSpent, double rewardPoints) {
+	public CustomerTransaction(String customerId, double amountSpent) {
 		this.customerId = customerId;
 		this.amountSpent = amountSpent;
-		this.rewardPoints = rewardPoints;
 		transactionDate = LocalDateTime.now();
 	}
 }
