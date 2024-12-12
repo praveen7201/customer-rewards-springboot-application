@@ -32,9 +32,12 @@ public class RetailerRewardService {
 
 		List<CustomerTransaction> transactions = customerTransactionRepository
 				.findTransactionsByCustomerIdAndDateBetween(customerId, startDate, endDate);
-
-		double totalAmountSpent = transactions.stream().mapToDouble(transaction -> transaction.getAmountSpent()).sum();
-		return calculatePoints(totalAmountSpent);
+		int rewardPointsTotal = 0;
+		if (Objects.nonNull(transactions) && !transactions.isEmpty()) {
+			rewardPointsTotal = calculatePoints(
+					(transactions.stream().mapToDouble(transaction -> transaction.getAmountSpent()).sum()));
+		}
+		return rewardPointsTotal;
 	}
 
 	public int getRewardsTotal(String customerId) {
