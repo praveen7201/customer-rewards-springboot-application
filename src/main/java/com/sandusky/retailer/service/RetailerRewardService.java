@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -32,21 +31,21 @@ public class RetailerRewardService {
 
 		List<CustomerTransaction> transactions = customerTransactionRepository
 				.findTransactionsByCustomerIdAndDateBetween(customerId, startDate, endDate);
-		int rewardPointsTotal = 0;
-		if (Objects.nonNull(transactions) && !transactions.isEmpty()) {
+		double rewardPointsTotal = 0;
+		if (!transactions.isEmpty()) {
 			rewardPointsTotal = calculatePoints(
 					(transactions.stream().mapToDouble(transaction -> transaction.getAmountSpent()).sum()));
 		}
 		return rewardPointsTotal;
 	}
 
-	public int getRewardsTotal(String customerId) {
+	public double getRewardsTotal(String customerId) {
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime threeMonthsAgo = now.minus(3, ChronoUnit.MONTHS);
-		int rewardsTotal = 0;
+		double rewardsTotal = 0;
 		List<CustomerTransaction> transactions = customerTransactionRepository
 				.findTransactionsByCustomerIdAndDate(customerId, threeMonthsAgo);
-		if (Objects.nonNull(transactions) && !transactions.isEmpty()) {
+		if (!transactions.isEmpty()) {
 			Map<Integer, Double> groupedByMonth = transactions.stream()
 					.collect(Collectors.groupingBy(t -> t.getTransactionDate().getMonthValue(), // Group by Month
 							Collectors.summingDouble(CustomerTransaction::getAmountSpent) // Sum the amounts by Month
@@ -58,12 +57,12 @@ public class RetailerRewardService {
 		return rewardsTotal;
 	}
 
-	private int calculatePoints(double amount) {
+	private double calculatePoints(double amount) {
 		if (amount > 100) {
-			return (int) ((amount - 100) * 2 + 50); // 2 points for every dollar over 100 + 1 point for
-													// 50-100
+			return ((amount - 100) * 2 + 50); // 2 points for every dollar over 100 + 1 point for
+												// 50-100
 		} else if (amount > 50) {
-			return (int) ((amount - 50)); // 1 point for every dollar over 50
+			return (amount - 50); // 1 point for every dollar over 50
 		} else {
 			return 0; // No points
 		}

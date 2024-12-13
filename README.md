@@ -10,6 +10,7 @@
 	7. API Endpoints
 	9. Testing
 	10. View MongoDB Database
+	11. Technical Document
 
 ## Introduction
 
@@ -159,3 +160,7 @@ After installing it, create a new Connection by using URI: mongodb://admin:admin
 27017 is the default MongoDB port no and "admin" is the authentication database.
 
 Once connection is created, you can browse the MongoDB collections in the "retailerDatabase".
+
+```
+## Technical Document
+	The Document detailing this API's high level architecture and services with other details can be found under documentation folder in this project.

@@ -113,7 +113,7 @@ class CustomerRewardControllerIntegrationTest {
 		// Test the API
 		String url = RewardPointConstants.HTTP_LOCALHOST.getValue() + port
 				+ RewardPointConstants.CUSTOMER_REWARDS_CUSTOMER_TOTAL_URI.getValue();
-		ResponseEntity<Integer> rewardPointsResponse = restTemplate.getForEntity(url, Integer.class);
+		ResponseEntity<Double> rewardPointsResponse = restTemplate.getForEntity(url, Double.class);
 
 		// Verify
 		assertThat(rewardPointsResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
